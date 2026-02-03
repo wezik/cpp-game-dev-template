@@ -130,10 +130,25 @@ JPH::BodyID CreateCircle(
 
 int main() {
     InitWindow(800, 600, "Raylib, Jolt, and Flecs POC");
-    SetTargetFPS(60);
+    SetTargetFPS(-1);
 
     PhysicsWorld physics;
     flecs::world ecs;
+
+    // Custom phase entities
+    auto FixedUpdate = ecs.entity("FixedUpdate");
+    auto FrameUpdate = ecs.entity("FrameUpdate");
+
+    // Pipelines that match systems by phase tag
+    auto fixed_pipeline = ecs.pipeline()
+        .with(flecs::System)
+        .with(FixedUpdate)
+        .build();
+
+    auto frame_pipeline = ecs.pipeline()
+        .with(flecs::System)
+        .with(FrameUpdate)
+        .build();
 
     // disable gravity
     physics.system.SetGravity(JPH::Vec3(0, 0, 0));
@@ -157,11 +172,13 @@ int main() {
             CreateCircle(physics, 400, 290, 30.0f, false)
         });
 
-    const float fixed_dt = 1.0f / 60.0f;
+    const float FIXED_DT = 1.0f / 60.0f;
+    const int MAX_STEPS = 5;
+    float accumulator = 0.0f;
 
-    // define ecs system for syncing physics to transforms
+    // define ecs system for syncing physics to transforms (runs at fixed rate)
     ecs.system<PhysicsBody, WorldTransform>()
-        .kind(flecs::OnUpdate)
+        .kind(FixedUpdate)
         .each([&](PhysicsBody& pb, WorldTransform& tr) {
             auto& bodyLock = physics.system.GetBodyLockInterfaceNoLock();
             JPH::BodyLockRead lock(bodyLock, pb.id);
@@ -182,9 +199,22 @@ int main() {
 
     // game loop
     while (!WindowShouldClose()) {
-        physics.Update(fixed_dt);
-        ecs.progress();
+        float frame_time = GetFrameTime();
+        accumulator += frame_time;
 
+        // fixed update
+        int steps = 0;
+        while (accumulator >= FIXED_DT && steps < MAX_STEPS) {
+            physics.Update(FIXED_DT);
+            ecs.run_pipeline(fixed_pipeline, FIXED_DT);
+            accumulator -= FIXED_DT;
+            steps++;
+        }
+
+        // frame update
+        ecs.run_pipeline(frame_pipeline, frame_time);
+
+        // rendering
         BeginDrawing();
         ClearBackground(raylib::RAYWHITE);
 
