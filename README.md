@@ -70,7 +70,7 @@ mise run dev        # Build and run
 ```bash
 cmake --preset debug
 cmake --build --preset debug
-./build/debug/cyberpunkpunk
+./build/debug/cpp-game
 ```
 
 ### Release build
@@ -85,7 +85,7 @@ Or manually:
 ```bash
 cmake --preset release
 cmake --build --preset release
-./build/release/cyberpunkpunk
+./build/release/cpp-game
 ```
 
 ## IDE Setup

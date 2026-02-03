@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.28.3)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-project(cyberpunkpunk)
+project(cpp-game)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

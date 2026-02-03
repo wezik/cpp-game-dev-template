@@ -55,12 +55,12 @@ depends = ["configure-release"]
 
 [tasks.dev]
 description = "Build and run (debug)"
-run = "./build/debug/cyberpunkpunk"
+run = "./build/debug/cpp-game"
 depends = ["build"]
 
 [tasks.release]
 description = "Build and run (release)"
-run = "./build/release/cyberpunkpunk"
+run = "./build/release/cpp-game"
 depends = ["build-release"]
 
 [tasks.clean]

@@ -23,11 +23,6 @@ struct PhysicsBody {
     JPH::BodyID id;
 };
 
-// namespace Layers {
-//     static constexpr JPH::ObjectLayer MOVING = 0;
-//     static constexpr JPH::ObjectLayer NUM_LAYERS = 1;
-// };
-
 namespace BroadPhaseLayers {
     static constexpr JPH::BroadPhaseLayer MOVING(0);
     static constexpr uint32 NUM_LAYERS = 1;
@@ -75,12 +70,10 @@ struct PhysicsWorld {
     ObjectvsBPLayerPairFilter pairFilter;
 
     PhysicsWorld() {
-        // Must register allocator before creating any Jolt objects
         JPH::RegisterDefaultAllocator();
         JPH::Factory::sInstance = new JPH::Factory();
         JPH::RegisterTypes();
 
-        // Now safe to create allocator and job system
         tempAllocator = std::make_unique<JPH::TempAllocatorImpl>(1024 * 1024);
         jobSystem = std::make_unique<JPH::JobSystemSingleThreaded>(JPH::cMaxPhysicsJobs);
 
