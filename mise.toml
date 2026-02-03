@@ -1,0 +1,72 @@
+[tools]
+ninja = "1.11.1"
+cmake = "3.28.3"
+
+[tasks.setup]
+description = "Install system dependencies (run once per machine)"
+run = """
+#!/usr/bin/env bash
+set -e
+
+if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    if command -v apt-get &> /dev/null; then
+        echo "Detected Debian/Ubuntu, installing dependencies..."
+        sudo apt-get update
+        sudo apt-get install -y libgl1-mesa-dev libx11-dev libxcursor-dev libxinerama-dev libxrandr-dev libxi-dev
+    elif command -v dnf &> /dev/null; then
+        echo "Detected Fedora/RHEL, installing dependencies..."
+        sudo dnf install -y mesa-libGL-devel libX11-devel libXcursor-devel libXinerama-devel libXrandr-devel libXi-devel
+    elif command -v pacman &> /dev/null; then
+        echo "Detected Arch Linux, installing dependencies..."
+        sudo pacman -S --needed --noconfirm mesa libx11 libxcursor libxinerama libxrandr libxi
+    else
+        echo "Unknown Linux distribution. Please install OpenGL and X11 development libraries manually."
+        exit 1
+    fi
+elif [[ "$OSTYPE" == "darwin"* ]]; then
+    echo "macOS detected - no additional dependencies needed (uses Metal/Cocoa)"
+elif [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "win32" ]]; then
+    echo "Windows detected - no additional dependencies needed"
+else
+    echo "Unknown OS: $OSTYPE"
+    exit 1
+fi
+
+echo "System dependencies installed successfully!"
+"""
+
+[tasks.configure]
+description = "Configure project (debug)"
+run = "cmake --preset debug"
+
+[tasks.configure-release]
+description = "Configure project (release)"
+run = "cmake --preset release"
+
+[tasks.build]
+description = "Build project (debug)"
+run = "cmake --build --preset debug"
+depends = ["configure"]
+
+[tasks.build-release]
+description = "Build project (release)"
+run = "cmake --build --preset release"
+depends = ["configure-release"]
+
+[tasks.dev]
+description = "Build and run (debug)"
+run = "./build/debug/cyberpunkpunk"
+depends = ["build"]
+
+[tasks.release]
+description = "Build and run (release)"
+run = "./build/release/cyberpunkpunk"
+depends = ["build-release"]
+
+[tasks.clean]
+description = "Remove build artifacts"
+run = "rm -rf build/"
+
+[tasks.rebuild]
+description = "Clean and rebuild"
+depends = ["clean", "build"]

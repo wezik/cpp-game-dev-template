@@ -1,9 +1,11 @@
 {
-    "name": "cyberpunkpunk",
-    "version": "0.0.1",
-    "dependencies": [
-        "flecs",
-        "jolt",
-        "raylib"
-    ]
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+  "name": "cyberpunkpunk",
+  "version-string": "0.0.1",
+  "dependencies": [
+    "raylib",
+    "raylib-cpp",
+    "flecs",
+    "joltphysics"
+  ]
 }
