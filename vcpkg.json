@@ -7,5 +7,11 @@
     "raylib-cpp",
     "flecs",
     "joltphysics"
+  ],
+  "overrides": [
+    { "name": "raylib", "version": "5.5" },
+    { "name": "raylib-cpp", "version": "5.5.0" },
+    { "name": "flecs", "version": "4.1.4" },
+    { "name": "joltphysics", "version": "5.5.0" }
   ]
 }
