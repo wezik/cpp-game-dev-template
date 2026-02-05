@@ -1,4 +1,4 @@
-#include "jolt_physics_world.h"
+#include "jolt_physics.h"
 
 #include <Jolt/Core/JobSystemSingleThreaded.h>
 #include <Jolt/Core/TempAllocator.h>

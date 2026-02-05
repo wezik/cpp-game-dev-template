@@ -1,6 +1,6 @@
 #pragma once
 
-#include "physics/jolt_physics_world.h"
+#include "physics/jolt_physics.h"
 
 #include <memory>
 
