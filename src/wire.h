@@ -8,4 +8,4 @@ namespace Provide {
 // NOTE: For now direct types are returned, it is done to favor domain exploration.
 // In the future, the underlying implementations should be swappable.
 std::unique_ptr<JoltPhysicsWorld> physics();
-}
+} // namespace Provide

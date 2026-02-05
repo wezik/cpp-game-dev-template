@@ -3,7 +3,7 @@
 #include <raylib-cpp.hpp>
 
 #include <Jolt/Jolt.h>
-#include <Jolt/Physics/PhysicsSystem.h>
+#include <Jolt/Physics/Body/BodyID.h>
 
 struct DynamicCircleBody {
     JPH::BodyID physics_id;

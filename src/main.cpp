@@ -1,33 +1,25 @@
-#include <raylib-cpp.hpp>
 #include <flecs.h>
+#include <raylib-cpp.hpp>
 
 #include "ball.h"
 #include "wire.h"
 
-#include <Jolt/Physics/Collision/Shape/SphereShape.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Jolt/Physics/Body/BodyLock.h>
+#include <Jolt/Physics/Collision/Shape/SphereShape.h>
 
-JPH::BodyID CreateCircle(
-    JoltPhysicsWorld& world,
-    float x,
-    float y,
-    float radius,
-    bool dynamic
-) {
+JPH::BodyID CreateCircle(JoltPhysicsWorld &world, float x, float y, float radius, bool dynamic) {
     auto shape = new JPH::SphereShape(radius);
 
-    JPH::BodyCreationSettings settings(
-        shape,
+    JPH::BodyCreationSettings settings(shape,
         JPH::Vec3(x, y, 0),
         JPH::Quat::sIdentity(),
         dynamic ? JPH::EMotionType::Dynamic : JPH::EMotionType::Static,
-        JPH::ObjectLayer(0)
-    );
+        JPH::ObjectLayer(0));
 
     settings.mAllowedDOFs = JPH::EAllowedDOFs::Plane2D;
 
-    auto& bi = world.get_body_interface();
+    auto &bi = world.get_body_interface();
     JPH::BodyID id = bi.CreateAndAddBody(settings, JPH::EActivation::Activate);
     return id;
 }
@@ -43,15 +35,9 @@ int main() {
     auto FixedUpdate = ecs.entity("FixedUpdate");
     auto FrameUpdate = ecs.entity("FrameUpdate");
 
-    auto fixed_pipeline = ecs.pipeline()
-        .with(flecs::System)
-        .with(FixedUpdate)
-        .build();
+    auto fixed_pipeline = ecs.pipeline().with(flecs::System).with(FixedUpdate).build();
 
-    auto frame_pipeline = ecs.pipeline()
-        .with(flecs::System)
-        .with(FrameUpdate)
-        .build();
+    auto frame_pipeline = ecs.pipeline().with(flecs::System).with(FrameUpdate).build();
 
     // disable gravity
     physics->get_system().SetGravity(JPH::Vec3(0, 0, 0));
@@ -59,12 +45,12 @@ int main() {
     // sync physics to ecs
     ecs.system<DynamicCircleBody, Transform>()
         .kind(FixedUpdate)
-        .each([&](DynamicCircleBody& pb, Transform& tr) {
-            auto& bodyLock = physics->get_system().GetBodyLockInterfaceNoLock();
+        .each([&](DynamicCircleBody &pb, Transform &tr) {
+            auto &bodyLock = physics->get_system().GetBodyLockInterfaceNoLock();
             JPH::BodyLockRead lock(bodyLock, pb.physics_id);
 
             if (lock.Succeeded()) {
-                const JPH::Body& body = lock.GetBody();
+                const JPH::Body &body = lock.GetBody();
                 auto transform = body.GetWorldTransform();
                 tr.translation.x = transform.GetTranslation().GetX();
                 tr.translation.y = transform.GetTranslation().GetY();
@@ -75,14 +61,14 @@ int main() {
     // listen for added bodies
     ecs.observer<DynamicCircleBody, Transform>()
         .event(flecs::OnSet)
-        .each([&](DynamicCircleBody& body, Transform& t) {
+        .each([&](DynamicCircleBody &body, Transform &t) {
             auto x = t.translation.x;
             auto y = t.translation.y;
             body.physics_id = CreateCircle(*physics, x, y, body.radius, true);
         });
 
     // spawn random balls heading toward center
-    auto& bi = physics->get_body_interface();
+    auto &bi = physics->get_body_interface();
     int ball_count = GetRandomValue(20, 30);
     float center_x = 400.0f;
     float center_y = 300.0f;
@@ -101,17 +87,15 @@ int main() {
         float vx = (dx / len) * speed;
         float vy = (dy / len) * speed;
 
-        raylib::Color color = {
+        raylib::Color color = {(unsigned char)GetRandomValue(50, 255),
             (unsigned char)GetRandomValue(50, 255),
             (unsigned char)GetRandomValue(50, 255),
-            (unsigned char)GetRandomValue(50, 255),
-            255
-        };
+            255};
 
         auto ball = ecs.entity()
-            .set<Transform>({ {x, y, 0}, {}, {1, 1, 1} })
-            .set<DynamicCircleBody>({ {}, radius })
-            .set<DrawableCircle>({ radius, color });
+                        .set<Transform>({{x, y, 0}, {}, {1, 1, 1}})
+                        .set<DynamicCircleBody>({{}, radius})
+                        .set<DrawableCircle>({radius, color});
 
         bi.SetLinearVelocity(ball.get<DynamicCircleBody>().physics_id, JPH::Vec3(vx, vy, 0));
     }
@@ -130,9 +114,9 @@ int main() {
             auto mouse_pos = GetMousePosition();
             auto translation = Vector2{mouse_pos.x, mouse_pos.y};
             auto physical_ball = DynamicCircleBody({}, radius);
-            auto transform =
-                Transform{Vector3(translation.x, translation.y, 0.0f),
-                    Quaternion(), Vector3(1.0f, 1.0f, 1.0f)};
+            auto transform = Transform{Vector3(translation.x, translation.y, 0.0f),
+                Quaternion(),
+                Vector3(1.0f, 1.0f, 1.0f)};
 
             ecs.entity()
                 .set<Transform>(transform)
@@ -160,7 +144,7 @@ int main() {
         BeginDrawing();
         ClearBackground(raylib::RAYWHITE);
 
-        ecs.each<DrawableCircle>([](flecs::entity e, DrawableCircle& dc) {
+        ecs.each<DrawableCircle>([](flecs::entity e, DrawableCircle &dc) {
             auto t = e.get<Transform>();
             DrawCircleV(Vector2(t.translation.x, t.translation.y), dc.radius, dc.color);
         });

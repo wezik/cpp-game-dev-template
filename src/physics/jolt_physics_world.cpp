@@ -1,6 +1,9 @@
 #include "jolt_physics_world.h"
 
+#include <Jolt/Core/JobSystemSingleThreaded.h>
+#include <Jolt/Core/TempAllocator.h>
 #include <Jolt/RegisterTypes.h>
+#include <memory>
 
 namespace {
 
@@ -8,10 +11,8 @@ constexpr JPH::BroadPhaseLayer MOVING_LAYER(0);
 constexpr uint32_t NUM_BROAD_PHASE_LAYERS = 1;
 
 class BPLayer final : public JPH::BroadPhaseLayerInterface {
-public:
-    uint GetNumBroadPhaseLayers() const override {
-        return NUM_BROAD_PHASE_LAYERS;
-    }
+  public:
+    uint GetNumBroadPhaseLayers() const override { return NUM_BROAD_PHASE_LAYERS; }
 
     JPH::BroadPhaseLayer GetBroadPhaseLayer(JPH::ObjectLayer) const override {
         return MOVING_LAYER;
@@ -19,17 +20,13 @@ public:
 };
 
 class ObjectBPLayerFilter final : public JPH::ObjectVsBroadPhaseLayerFilter {
-public:
-    bool ShouldCollide(JPH::ObjectLayer, JPH::BroadPhaseLayer) const override {
-        return true;
-    }
+  public:
+    bool ShouldCollide(JPH::ObjectLayer, JPH::BroadPhaseLayer) const override { return true; }
 };
 
 class ObjectPairFilter final : public JPH::ObjectLayerPairFilter {
-public:
-    bool ShouldCollide(JPH::ObjectLayer, JPH::ObjectLayer) const override {
-        return true;
-    }
+  public:
+    bool ShouldCollide(JPH::ObjectLayer, JPH::ObjectLayer) const override { return true; }
 };
 
 // static instances for PhysicsSystem init
@@ -37,7 +34,7 @@ static BPLayer s_broad_phase;
 static ObjectBPLayerFilter s_layer_filter;
 static ObjectPairFilter s_pair_filter;
 
-}
+} // namespace
 
 JoltPhysicsWorld::JoltPhysicsWorld() {
     JPH::RegisterDefaultAllocator();
@@ -53,15 +50,13 @@ JoltPhysicsWorld::JoltPhysicsWorld() {
     constexpr uint32_t max_contact_constraints = 1024;
 
     system = std::make_unique<JPH::PhysicsSystem>();
-    system->Init(
-        max_bodies,
+    system->Init(max_bodies,
         num_body_mutexes,
         max_body_pairs,
         max_contact_constraints,
         s_broad_phase,
         s_layer_filter,
-        s_pair_filter
-    );
+        s_pair_filter);
 }
 
 JoltPhysicsWorld::~JoltPhysicsWorld() {
