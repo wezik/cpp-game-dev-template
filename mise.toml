@@ -1,69 +1,71 @@
 [tools]
 ninja = "1.11.1"
-cmake = "3.28.3"
+pipx = "1.8.0" # required by conan and meson
+conan = "2.25.2"
+meson = "1.10.1"
 
-[tasks.setup]
-description = "Install system dependencies (run once per machine)"
+# --- building ---
+
+# building
+[tasks.build]
+depends = ["compile-meson"]
+
+# meson build system
+[tasks.compile-meson]
+hide = true
+run = "meson compile -C meson/build"
+depends = ["build-meson"]
+
+[tasks.build-meson]
+hide = true
 run = """
-#!/usr/bin/env bash
-set -e
+meson setup --native-file conan/build/conan_meson_native.ini meson/build --reconfigure 2>/dev/null \
+  || meson setup --native-file conan/build/conan_meson_native.ini meson/build
+ln -sf meson/build/compile_commands.json compile_commands.json
+"""
+depends = ["build-conan"]
 
-if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    if command -v apt-get &> /dev/null; then
-        echo "Detected Debian/Ubuntu, installing dependencies..."
-        sudo apt-get update
-        sudo apt-get install -y libgl1-mesa-dev libx11-dev libxcursor-dev libxinerama-dev libxrandr-dev libxi-dev
-    elif command -v dnf &> /dev/null; then
-        echo "Detected Fedora/RHEL, installing dependencies..."
-        sudo dnf install -y mesa-libGL-devel libX11-devel libXcursor-devel libXinerama-devel libXrandr-devel libXi-devel
-    elif command -v pacman &> /dev/null; then
-        echo "Detected Arch Linux, installing dependencies..."
-        sudo pacman -S --needed --noconfirm mesa libx11 libxcursor libxinerama libxrandr libxi
-    else
-        echo "Unknown Linux distribution. Please install OpenGL and X11 development libraries manually."
-        exit 1
-    fi
-elif [[ "$OSTYPE" == "darwin"* ]]; then
-    echo "macOS detected - no additional dependencies needed (uses Metal/Cocoa)"
-elif [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "win32" ]]; then
-    echo "Windows detected - no additional dependencies needed"
+# conan dependency management
+[tasks.build-conan]
+hide = true
+run = "conan install . -sbuild_type=Debug -s compiler.cppstd=23 -of=conan/build --build=missing -pr=conan/profile"
+
+# conan setup script
+[tasks.setup-conan]
+hide = true
+# detect compiler and generate a repo-local conan profile
+run = """
+echo 'mise manages dependencies using python3-venv, it might be required to install it first'
+PROFILE_NAME=_project_detect
+if command -v clang++ &>/dev/null; then
+echo "Detected clang++, selecting clang as preferred compiler"
+CC=clang CXX=clang++ conan profile detect --force --name "$PROFILE_NAME"
 else
-    echo "Unknown OS: $OSTYPE"
-    exit 1
+echo ""
+echo "WARNING: clang++ not found. clang is the preferred compiler for this project"
+echo "  (clangd LSP works best with clang compile commands)."
+echo "  Install clang to get the best experience, e.g.: sudo apt install clang"
+echo ""
+read -p "Continue setup with gcc? [Y/n] " choice
+case "$choice" in
+n|N) echo "Setup aborted."; exit 1 ;;
+esac
+conan profile detect --force --name "$PROFILE_NAME"
 fi
-
-echo "System dependencies installed successfully!"
+mv "$(conan config home)/profiles/$PROFILE_NAME" conan/profile
+echo "Conan profile written to conan/profile"
 """
 
-[tasks.configure]
-description = "Configure project (debug)"
-run = "cmake --preset debug"
+[tasks.setup]
+depends = ["setup-conan"]
 
-[tasks.configure-release]
-description = "Configure project (release)"
-run = "cmake --preset release"
-
-[tasks.build]
-description = "Build project (debug)"
-run = "cmake --build --preset debug"
-depends = ["configure"]
-
-[tasks.build-release]
-description = "Build project (release)"
-run = "cmake --build --preset release"
-depends = ["configure-release"]
-
+# --- running ---
 [tasks.dev]
 description = "Build and run (debug)"
-run = "./build/debug/cpp-game"
+run = "./meson/build/cpp-game"
 depends = ["build"]
 
-[tasks.release]
-description = "Build and run (release)"
-run = "./build/release/cpp-game"
-depends = ["build-release"]
-
-# unfortunately mise fmt shortcut is stolen by mise itself
+# --- formatting ---
 [tasks.format]
 description = "Format codebase with clang-format"
 run = "clang-format -i $(git ls-files '*.cpp' '*.h')"
@@ -71,11 +73,3 @@ run = "clang-format -i $(git ls-files '*.cpp' '*.h')"
 [tasks.format-check]
 description = "Check codebase with clang-format"
 run = "clang-format --dry-run --Werror $(git ls-files '*.cpp' '*.h')"
-
-[tasks.clean]
-description = "Remove build artifacts"
-run = "rm -rf build/"
-
-[tasks.rebuild]
-description = "Clean and rebuild"
-depends = ["clean", "build"]

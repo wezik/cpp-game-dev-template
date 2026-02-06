@@ -1,9 +1,8 @@
 #pragma once
 
-#include <raylib-cpp.hpp>
-
 #include <Jolt/Jolt.h>
 #include <Jolt/Physics/Body/BodyID.h>
+#include <raylib.h>
 
 struct DynamicCircleBody {
     JPH::BodyID physics_id;
@@ -12,7 +11,7 @@ struct DynamicCircleBody {
 
 struct DrawableCircle {
     float radius;
-    raylib::Color color;
+    Color color;
 };
 
 struct Ball {

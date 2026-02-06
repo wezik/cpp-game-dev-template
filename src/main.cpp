@@ -1,5 +1,4 @@
 #include <flecs.h>
-#include <raylib-cpp.hpp>
 
 #include "ball.h"
 #include "wire.h"
@@ -7,6 +6,7 @@
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Jolt/Physics/Body/BodyLock.h>
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
+#include <raylib.h>
 
 JPH::BodyID CreateCircle(JoltPhysicsWorld &world, float x, float y, float radius, bool dynamic) {
     auto shape = new JPH::SphereShape(radius);
@@ -87,7 +87,7 @@ int main() {
         float vx = (dx / len) * speed;
         float vy = (dy / len) * speed;
 
-        raylib::Color color = {(unsigned char)GetRandomValue(50, 255),
+        Color color = {(unsigned char)GetRandomValue(50, 255),
             (unsigned char)GetRandomValue(50, 255),
             (unsigned char)GetRandomValue(50, 255),
             255};
@@ -108,9 +108,9 @@ int main() {
     while (!WindowShouldClose()) {
         float frame_time = GetFrameTime();
 
-        if (raylib::Keyboard::IsKeyPressed(KEY_SPACE)) {
+        if (IsKeyPressed(KEY_SPACE)) {
             float radius = 32.0f;
-            auto drawable_ball = DrawableCircle{radius, raylib::RED};
+            auto drawable_ball = DrawableCircle{radius, RED};
             auto mouse_pos = GetMousePosition();
             auto translation = Vector2{mouse_pos.x, mouse_pos.y};
             auto physical_ball = DynamicCircleBody({}, radius);
@@ -142,7 +142,7 @@ int main() {
 
         // rendering
         BeginDrawing();
-        ClearBackground(raylib::RAYWHITE);
+        ClearBackground(RAYWHITE);
 
         ecs.each<DrawableCircle>([](flecs::entity e, DrawableCircle &dc) {
             auto t = e.get<Transform>();
