@@ -61,9 +61,11 @@ depends = ["setup-conan"]
 
 # --- running ---
 [tasks.dev]
-description = "Build and run (debug)"
-run = "./meson/build/cpp-game"
-depends = ["build"]
+description = "Compile and run (debug)"
+run = """
+meson compile -C meson/build
+./meson/build/cpp-game
+"""
 
 # --- formatting ---
 [tasks.format]
